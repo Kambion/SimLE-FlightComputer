@@ -1,10 +1,6 @@
 #include <Arduino.h>
 #include <flightmanager.hpp>
 
-//############################################
-//SimLE Stardust Arduino Mega Flight Computer
-//############################################
-
 
 #if SPI_DRIVER_SELECT == 2  // Must be set in SdFat/SdFatConfig.h
 

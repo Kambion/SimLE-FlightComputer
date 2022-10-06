@@ -2,9 +2,11 @@
 #define ONE_WIRE_BUS 5
 //
 
-//GPS CONFIG
-constexpr unsigned long GPSdelay = 5000;
+//GENERAL CONFIG
+constexpr unsigned long GPSSavePeriod = 5000;
+constexpr unsigned long SensorsSavePeriod = 5000;
 //
+
 
 //SD SOFTSPI CONFIG
 const uint8_t SD_CS_PIN = 10;

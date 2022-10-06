@@ -16,12 +16,15 @@ class FlightManager {
 public:
     FlightManager(TinyGPSPlus& gps, SoftWire& softWire, SdFat& sd, DallasTemperature& sensors, Adafruit_MPRLS& mpr) : gps(gps), softWire(softWire), sd(sd), sensors(sensors), mpr(mpr) {}
     void updateGPS();
+    void saveGPSDataOnSDCard();
+    void saveSensorsDataOnSDCard();
+    //Debug functions
     void printGPS();
     void printTime();
     void printTemperature();
     void printPressure();
     void printSensorsData();
-    void saveGPSDataOnSDCard();
+    //
 private:
     void printTwoDigit(int n, bool sdcard = false);
     void readTime();

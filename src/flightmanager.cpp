@@ -155,3 +155,38 @@ void FlightManager::printSensorsData(){
   printTemperature();
   printPressure();
 }
+
+void FlightManager::saveSensorsDataOnSDCard() {
+  readTime();
+  if(file.open("sensorsData.txt", O_RDWR | O_CREAT | O_AT_END)){
+    file.print("Time: ");
+    file.print(year);
+    file.print('-');
+    printTwoDigit(month, true);
+    file.print('-');
+    printTwoDigit(dateOfMonth, true);
+    file.print(' ');
+    printTwoDigit(hour, true);
+    file.print(':');
+    printTwoDigit(minute, true);
+    file.print(':');
+    printTwoDigit(second, true);
+    sensors.requestTemperatures();
+    for (int i = 0; i < sensors.getDeviceCount(); i++){
+      file.print(" Temp ");
+      file.print(i+1);
+      file.print(" : ");
+      file.print(sensors.getTempCByIndex(i));
+      file.print(" C");
+    }
+    readPressure();
+    file.print(" Pressure: ");
+    file.print(pressure_hPa);
+    file.println(" hPa");
+    file.close();
+    Serial.println("Sensors Data saved on SD card");
+  }
+  else{
+    Serial.println("SD card file save failed");
+  }
+}

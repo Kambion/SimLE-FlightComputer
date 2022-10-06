@@ -38,7 +38,8 @@ FlightManager flightManager(gps, softWire, sd, sensors, mpr);
 
 AsyncDelay readInterval;
 
-unsigned long lastGPS = 0;
+unsigned long lastGPSSave = 0;
+unsigned long lastSensorsSave = 0;
 
 void setup() {
   Serial.begin(9600);
@@ -62,9 +63,13 @@ void setup() {
 
 void loop() {
   flightManager.updateGPS();
-  if(millis() - lastGPS > GPSdelay){
-    flightManager.printSensorsData();
-    lastGPS = millis();
+  if(millis() - lastGPSSave > GPSSavePeriod){
+    flightManager.saveGPSDataOnSDCard();
+    lastGPSSave = millis();
+  }
+  if(millis() - lastSensorsSave > SensorsSavePeriod){
+    flightManager.saveSensorsDataOnSDCard();
+    lastSensorsSave = millis();
   }
 }
 #else  // SPI_DRIVER_SELECT

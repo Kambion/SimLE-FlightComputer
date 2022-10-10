@@ -7,11 +7,16 @@ void FlightManager::updateGPS(){
 }
 
 void FlightManager::printGPS(){
+  if(settings.gpsModule){
     Serial.print(F("Location: ")); 
     Serial.print(gps.location.lat(), 6);
     Serial.print(F(", "));
     Serial.print(gps.location.lng(), 6);
     Serial.println();
+  }
+  else {
+    Serial.println("No GPS Module, change settings in config.hpp");
+  }
 }
 
 void FlightManager::readTime(){
@@ -102,53 +107,62 @@ void FlightManager::printTwoDigit(int n, bool sdcard)
 }
 
 void FlightManager::saveGPSDataOnSDCard(){
-  readTime();
-  if(file.open("gpsData.txt", O_RDWR | O_CREAT | O_AT_END)){
-    file.print("Time: ");
-    file.print(year);
-    file.print('-');
-    printTwoDigit(month, true);
-    file.print('-');
-    printTwoDigit(dateOfMonth, true);
-    file.print(' ');
-    printTwoDigit(hour, true);
-    file.print(':');
-    printTwoDigit(minute, true);
-    file.print(':');
-    printTwoDigit(second, true);
-    file.print(F(" Location: ")); 
-    file.print(gps.location.lat(), 6);
-    file.print(F(", "));
-    file.print(gps.location.lng(), 6);
-    file.println();
-    file.close();
-    Serial.println("GPS Data saved on SD card");
-  }
-  else{
-    Serial.println("SD card file save failed");
+  if(settings.gpsModule && settings.SDcard) {
+    readTime();
+    if(file.open("gpsData.txt", O_RDWR | O_CREAT | O_AT_END)){
+        file.print("Time: ");
+        file.print(year);
+        file.print('-');
+        printTwoDigit(month, true);
+        file.print('-');
+        printTwoDigit(dateOfMonth, true);
+        file.print(' ');
+        printTwoDigit(hour, true);
+        file.print(':');
+        printTwoDigit(minute, true);
+        file.print(':');
+        printTwoDigit(second, true);
+        file.print(F(" Location: ")); 
+        file.print(gps.location.lat(), 6);
+        file.print(F(", "));
+        file.print(gps.location.lng(), 6);
+        file.println();
+        file.close();
+        if(settings.debugLogs)
+          Serial.println("GPS Data saved on SD card");
+      }
+      else {
+        if(settings.debugLogs)
+          Serial.println("SD card file save failed");
+    }
   }
 }
 
 void FlightManager::printTemperature() {
-  sensors.requestTemperatures();
-  for (int i = 0; i < sensors.getDeviceCount(); i++){
-    Serial.print("Temp ");
-    Serial.print(i+1);
-    Serial.print(" : ");
-    Serial.print(sensors.getTempCByIndex(i));
-    Serial.println(" C");
+  if(settings.temperatureSensors){
+    sensors.requestTemperatures();
+    for (int i = 0; i < sensors.getDeviceCount(); i++){
+      Serial.print("Temp ");
+      Serial.print(i+1);
+      Serial.print(" : ");
+      Serial.print(sensors.getTempCByIndex(i));
+      Serial.println(" C");
+    }
   }
 }
 
 void FlightManager::readPressure() {
-  pressure_hPa = mpr.readPressure();
+  if(settings.pressureSensors)
+    pressure_hPa = mpr.readPressure();
 }
 
 void FlightManager::printPressure(){
-  readPressure();
-  Serial.print("Pressure: ");
-  Serial.print(pressure_hPa);
-  Serial.println(" hPa");
+  if(settings.pressureSensors){
+    readPressure();
+    Serial.print("Pressure: ");
+    Serial.print(pressure_hPa);
+    Serial.println(" hPa");
+  }
 }
 
 void FlightManager::printSensorsData(){
@@ -157,36 +171,44 @@ void FlightManager::printSensorsData(){
 }
 
 void FlightManager::saveSensorsDataOnSDCard() {
-  readTime();
-  if(file.open("sensorsData.txt", O_RDWR | O_CREAT | O_AT_END)){
-    file.print("Time: ");
-    file.print(year);
-    file.print('-');
-    printTwoDigit(month, true);
-    file.print('-');
-    printTwoDigit(dateOfMonth, true);
-    file.print(' ');
-    printTwoDigit(hour, true);
-    file.print(':');
-    printTwoDigit(minute, true);
-    file.print(':');
-    printTwoDigit(second, true);
-    sensors.requestTemperatures();
-    for (int i = 0; i < sensors.getDeviceCount(); i++){
-      file.print(" Temp ");
-      file.print(i+1);
-      file.print(" : ");
-      file.print(sensors.getTempCByIndex(i));
-      file.print(" C");
+  if(settings.SDcard){
+    readTime();
+    if(file.open("sensorsData.txt", O_RDWR | O_CREAT | O_AT_END)){
+      file.print("Time: ");
+      file.print(year);
+      file.print('-');
+      printTwoDigit(month, true);
+      file.print('-');
+      printTwoDigit(dateOfMonth, true);
+      file.print(' ');
+      printTwoDigit(hour, true);
+      file.print(':');
+      printTwoDigit(minute, true);
+      file.print(':');
+      printTwoDigit(second, true);
+      if(settings.temperatureSensors){
+        sensors.requestTemperatures();
+        for (int i = 0; i < sensors.getDeviceCount(); i++){
+          file.print(" Temp ");
+          file.print(i+1);
+          file.print(" : ");
+          file.print(sensors.getTempCByIndex(i));
+          file.print(" C");
+        }
+      }
+      if(settings.pressureSensors){
+        readPressure();
+        file.print(" Pressure: ");
+        file.print(pressure_hPa);
+        file.println(" hPa");
+      }
+      file.close();
+      if(settings.debugLogs)
+        Serial.println("Sensors Data saved on SD card");
     }
-    readPressure();
-    file.print(" Pressure: ");
-    file.print(pressure_hPa);
-    file.println(" hPa");
-    file.close();
-    Serial.println("Sensors Data saved on SD card");
-  }
-  else{
-    Serial.println("SD card file save failed");
+    else {
+      if(settings.debugLogs)
+        Serial.println("SD card file save failed");
+    }
   }
 }

@@ -1,3 +1,11 @@
+//BASIC SETTINGS
+struct Settings {
+    bool debugLogs = true;
+    bool temperatureSensors = true;
+    bool pressureSensors = true;
+    bool gpsModule = true;
+    bool SDcard = true;
+};
 //ONEWIRE TEMPERATURE CONFIG
 #define ONE_WIRE_BUS 5
 //

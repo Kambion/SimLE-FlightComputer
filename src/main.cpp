@@ -49,16 +49,21 @@ void setup() {
   softWire.setDelay_us(5);
   softWire.setTimeout(1000);
   softWire.begin();
-  if (!sd.begin(SD_CONFIG)) {
-      sd.initErrorHalt();
-  }
-  if (! mpr.begin()) {
-    Serial.println("Failed to communicate with MPRLS sensor, check wiring?");
-    while (1) {
-      delay(10);
+  if(flightManager.settings.SDcard){
+    if (!sd.begin(SD_CONFIG)) {
+        sd.initErrorHalt();
     }
   }
-  sensors.begin();
+  if(flightManager.settings.pressureSensors){
+    if (! mpr.begin()) {
+      Serial.println("Failed to communicate with MPRLS sensor, check wiring?");
+      while (1) {
+        delay(10);
+      }
+    }
+  }
+  if(flightManager.settings.temperatureSensors)
+    sensors.begin();
 }
 
 void loop() {

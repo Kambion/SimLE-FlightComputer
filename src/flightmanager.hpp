@@ -25,6 +25,7 @@ public:
     void printPressure();
     void printSensorsData();
     //
+    Settings settings;
 private:
     void printTwoDigit(int n, bool sdcard = false);
     void readTime();

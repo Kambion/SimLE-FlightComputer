@@ -40,10 +40,12 @@ AsyncDelay readInterval;
 
 unsigned long lastGPSSave = 0;
 unsigned long lastSensorsSave = 0;
+unsigned long lastLoRaTransmission = 0;
 
 void setup() {
   Serial.begin(9600);
   GPSSerial.begin(9600);
+  LoRaSerial.begin(9600);
   softWire.setTxBuffer(swTxBuffer, sizeof(swTxBuffer));
   softWire.setRxBuffer(swRxBuffer, sizeof(swRxBuffer));
   softWire.setDelay_us(5);
@@ -75,6 +77,10 @@ void loop() {
   if(millis() - lastSensorsSave > SensorsSavePeriod){
     flightManager.saveSensorsDataOnSDCard();
     lastSensorsSave = millis();
+  }
+  if(millis() - lastLoRaTransmission > LoRaTransmissionPeriod){
+    flightManager.sendPosition();
+    lastLoRaTransmission = millis();
   }
 }
 #else  // SPI_DRIVER_SELECT

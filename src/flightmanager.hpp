@@ -9,6 +9,7 @@
 #include <config.hpp>
 
 #define GPSSerial Serial1
+#define LoRaSerial Serial2
 
 const uint8_t I2C_ADDRESS = 0x68;
 
@@ -24,6 +25,7 @@ public:
     void printTemperature();
     void printPressure();
     void printSensorsData();
+    void sendPosition();
     //
     Settings settings;
 private:

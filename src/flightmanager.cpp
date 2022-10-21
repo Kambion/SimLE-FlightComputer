@@ -212,3 +212,11 @@ void FlightManager::saveSensorsDataOnSDCard() {
     }
   }
 }
+
+void FlightManager::sendPosition(){
+  LoRaSerial.print(gps.location.lat(), 6);
+  LoRaSerial.print(F(" "));
+  LoRaSerial.println(gps.location.lng(), 6);
+  if(settings.debugLogs)
+    Serial.println("Position sent");
+}

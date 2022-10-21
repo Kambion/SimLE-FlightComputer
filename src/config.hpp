@@ -4,7 +4,7 @@ struct Settings {
     bool temperatureSensors = true;
     bool pressureSensors = true;
     bool gpsModule = true;
-    bool SDcard = true;
+    bool SDcard = false;
 };
 //ONEWIRE TEMPERATURE CONFIG
 #define ONE_WIRE_BUS 5
@@ -13,6 +13,7 @@ struct Settings {
 //GENERAL CONFIG
 constexpr unsigned long GPSSavePeriod = 5000;
 constexpr unsigned long SensorsSavePeriod = 5000;
+constexpr unsigned long LoRaTransmissionPeriod = 10000;
 //
 
 

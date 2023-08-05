@@ -1,19 +1,14 @@
-//BASIC SETTINGS
-struct Settings {
-    bool debugLogs = true;
-    bool temperatureSensors = true;
-    bool pressureSensors = true;
-    bool gpsModule = true;
-    bool SDcard = false;
-};
+
 //ONEWIRE TEMPERATURE CONFIG
 #define ONE_WIRE_BUS 5
+#define LED_PIN 6
+#define BUZZER_PIN 3
+#define CUTDOWN_PIN 2
 //
 
 //GENERAL CONFIG
-constexpr unsigned long GPSSavePeriod = 5000;
-constexpr unsigned long SensorsSavePeriod = 5000;
-constexpr unsigned long LoRaTransmissionPeriod = 10000;
+constexpr unsigned long SDSavePeriod = 5000;
+constexpr unsigned long CutdownTime = 60000;
 //
 
 

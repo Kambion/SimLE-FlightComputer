@@ -1,12 +1,10 @@
+#define SPI_DRIVER_SELECT 2
 #include <Arduino.h>
 #include <flightmanager.hpp>
 
-//############################################
-//SimLE Stardust Arduino Mega Flight Computer
-//############################################
-
-
-#if SPI_DRIVER_SELECT == 2  // Must be set in SdFat/SdFatConfig.h
+//##############################################################//
+//SimLE Stardust Arduino Mega Flight Computer known as OBC v1.0 //
+//##############################################################//
 
 // SdFat software SPI template
 SoftSpiDriver<SOFT_MISO_PIN, SOFT_MOSI_PIN, SOFT_SCK_PIN> softSpi;
@@ -38,9 +36,8 @@ FlightManager flightManager(gps, softWire, sd, sensors, mpr);
 
 AsyncDelay readInterval;
 
-unsigned long lastGPSSave = 0;
-unsigned long lastSensorsSave = 0;
-unsigned long lastLoRaTransmission = 0;
+unsigned long lastSDSave = 0;
+unsigned long changeLED = 0;
 
 void setup() {
   Serial.begin(9600);
@@ -51,38 +48,34 @@ void setup() {
   softWire.setDelay_us(5);
   softWire.setTimeout(1000);
   softWire.begin();
-  if(flightManager.settings.SDcard){
-    if (!sd.begin(SD_CONFIG)) {
-        sd.initErrorHalt();
-    }
+
+  if (!sd.begin(SD_CONFIG)) {
+    Serial.println("sd.begin() failed.");
+    sd.initErrorHalt();
   }
-  if(flightManager.settings.pressureSensors){
-    if (! mpr.begin()) {
-      Serial.println("Failed to communicate with MPRLS sensor, check wiring?");
-      while (1) {
-        delay(10);
-      }
-    }
+
+  if (!mpr.begin()) {
+    Serial.println("mpr.begin() failed.");
   }
-  if(flightManager.settings.temperatureSensors)
-    sensors.begin();
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
+  pinMode(CUTDOWN_PIN, OUTPUT);
+  digitalWrite(CUTDOWN_PIN, LOW);
+  
+  sensors.begin();
 }
 
 void loop() {
   flightManager.updateGPS();
-  if(millis() - lastGPSSave > GPSSavePeriod){
-    flightManager.saveGPSDataOnSDCard();
-    lastGPSSave = millis();
+  flightManager.checkCutdown();
+  if(millis() - lastSDSave > SDSavePeriod){
+    flightManager.saveFrame();
+    lastSDSave = millis();
+    //TODO: Test gps.
+    flightManager.printGPS();
   }
-  if(millis() - lastSensorsSave > SensorsSavePeriod){
-    flightManager.saveSensorsDataOnSDCard();
-    lastSensorsSave = millis();
-  }
-  if(millis() - lastLoRaTransmission > LoRaTransmissionPeriod){
-    flightManager.sendPosition();
-    lastLoRaTransmission = millis();
+  if(millis() - changeLED > 1000){
+    digitalWrite(LED_PIN, !digitalRead(LED_PIN));
+    changeLED = millis();
   }
 }
-#else  // SPI_DRIVER_SELECT
-#error SPI_DRIVER_SELECT must be two in SdFat/SdFatConfig.h
-#endif  //SPI_DRIVER_SELECT

@@ -7,16 +7,11 @@ void FlightManager::updateGPS(){
 }
 
 void FlightManager::printGPS(){
-  if(settings.gpsModule){
-    Serial.print(F("Location: ")); 
-    Serial.print(gps.location.lat(), 6);
-    Serial.print(F(", "));
-    Serial.print(gps.location.lng(), 6);
-    Serial.println();
-  }
-  else {
-    Serial.println("No GPS Module, change settings in config.hpp");
-  }
+  Serial.print(F("Location: ")); 
+  Serial.print(gps.location.lat(), 6);
+  Serial.print(F(", "));
+  Serial.print(gps.location.lng(), 6);
+  Serial.println();
 }
 
 void FlightManager::readTime(){
@@ -106,63 +101,26 @@ void FlightManager::printTwoDigit(int n, bool sdcard)
   }
 }
 
-void FlightManager::saveGPSDataOnSDCard(){
-  if(settings.gpsModule && settings.SDcard) {
-    readTime();
-    if(file.open("gpsData.txt", O_RDWR | O_CREAT | O_AT_END)){
-        file.print("Time: ");
-        file.print(year);
-        file.print('-');
-        printTwoDigit(month, true);
-        file.print('-');
-        printTwoDigit(dateOfMonth, true);
-        file.print(' ');
-        printTwoDigit(hour, true);
-        file.print(':');
-        printTwoDigit(minute, true);
-        file.print(':');
-        printTwoDigit(second, true);
-        file.print(F(" Location: ")); 
-        file.print(gps.location.lat(), 6);
-        file.print(F(", "));
-        file.print(gps.location.lng(), 6);
-        file.println();
-        file.close();
-        if(settings.debugLogs)
-          Serial.println("GPS Data saved on SD card");
-      }
-      else {
-        if(settings.debugLogs)
-          Serial.println("SD card file save failed");
-    }
-  }
-}
-
 void FlightManager::printTemperature() {
-  if(settings.temperatureSensors){
-    sensors.requestTemperatures();
-    for (int i = 0; i < sensors.getDeviceCount(); i++){
-      Serial.print("Temp ");
-      Serial.print(i+1);
-      Serial.print(" : ");
-      Serial.print(sensors.getTempCByIndex(i));
-      Serial.println(" C");
-    }
+  sensors.requestTemperatures();
+  for (int i = 0; i < sensors.getDeviceCount(); i++){
+    Serial.print("Temp ");
+    Serial.print(i+1);
+    Serial.print(" : ");
+    Serial.print(sensors.getTempCByIndex(i));
+    Serial.println(" C");
   }
 }
 
 void FlightManager::readPressure() {
-  if(settings.pressureSensors)
-    pressure_hPa = mpr.readPressure();
+  pressure_hPa = mpr.readPressure();
 }
 
 void FlightManager::printPressure(){
-  if(settings.pressureSensors){
-    readPressure();
-    Serial.print("Pressure: ");
-    Serial.print(pressure_hPa);
-    Serial.println(" hPa");
-  }
+  readPressure();
+  Serial.print("Pressure: ");
+  Serial.print(pressure_hPa);
+  Serial.println(" hPa");
 }
 
 void FlightManager::printSensorsData(){
@@ -170,45 +128,125 @@ void FlightManager::printSensorsData(){
   printPressure();
 }
 
-void FlightManager::saveSensorsDataOnSDCard() {
-  if(settings.SDcard){
+
+///*YYYY-MM-DDTHH:MM:SS,lattitude,longtitude,height, speed, course, numberOfSatelites,pressure,temp1,temp2*/
+void FlightManager::saveFrame() {
+  readTime();
+  readPressure();
+  sensors.requestTemperatures();
+  if(file.open("frameData.txt", O_RDWR | O_CREAT | O_AT_END)){
+    // file.print("Time: ");
+    String frame = "/*" 
+                  + String(year)
+                  + "-"
+                  + String(month)
+                  + "-"
+                  + String(dateOfMonth)
+                  + "T"
+                  + String(hour)
+                  + ":"
+                  + String(minute)
+                  + ":"
+                  + String(second)
+                  + ","
+                  + String(gps.location.lat(), 6)
+                  + ","
+                  + String(gps.location.lng(), 6)
+                  + ","
+                  + String(gps.altitude.meters())
+                  + ","
+                  + String(gps.speed.kmph(),6)
+                  + ","
+                  + String(gps.course.deg(),6)
+                  + ","
+                  + String(gps.satellites.value())
+                  + ","
+                  + String(pressure_hPa)
+                  + ",";
+                  for (int i = 0; i < sensors.getDeviceCount(); i++){
+                    frame += String(sensors.getTempCByIndex(i));
+                    if(i != sensors.getDeviceCount() - 1){
+                      frame += ",";
+                    }
+                  }
+                  + "*/";
+    file.println(frame);  
+    file.close();
+    Serial.println("Sensors Data saved on SD card");
+  }
+  else {
+    Serial.println("SD card file save failed");
+  }
+}
+
+void FlightManager::cutdownNOW(){
+    cutdownStatus = ITSTHEFINALCUTDOWN;
+    digitalWrite(CUTDOWN_PIN, HIGH);
+    Serial.println("Cutdown Begin");
     readTime();
-    if(file.open("sensorsData.txt", O_RDWR | O_CREAT | O_AT_END)){
-      file.print("Time: ");
-      file.print(year);
-      file.print('-');
-      printTwoDigit(month, true);
-      file.print('-');
-      printTwoDigit(dateOfMonth, true);
-      file.print(' ');
-      printTwoDigit(hour, true);
-      file.print(':');
-      printTwoDigit(minute, true);
-      file.print(':');
-      printTwoDigit(second, true);
-      if(settings.temperatureSensors){
-        sensors.requestTemperatures();
-        for (int i = 0; i < sensors.getDeviceCount(); i++){
-          file.print(" Temp ");
-          file.print(i+1);
-          file.print(" : ");
-          file.print(sensors.getTempCByIndex(i));
-          file.print(" C");
-        }
-      }
-      if(settings.pressureSensors){
-        readPressure();
-        file.print(" Pressure: ");
-        file.print(pressure_hPa);
-        file.println(" hPa");
-      }
+    if(file.open("cutdownLog.txt", O_RDWR | O_CREAT | O_AT_END)){
+      String info = String(hour)
+                  + ":"
+                  + String(minute)
+                  + ":"
+                  + String(second)
+                  + " Cutdown Begin";
+      file.println(info);
       file.close();
-      if(settings.debugLogs)
-        Serial.println("Sensors Data saved on SD card");
     }
-    else {
-      if(settings.debugLogs)
-        Serial.println("SD card file save failed");
+    cutdownStartTime = millis();
+}
+
+void FlightManager::checkCutdown(){
+  if(!cutdownHappend){
+    if ((gps.altitude.meters() >= 0) && (cutdownStatus == DISARMED) && gps.location.isValid() && gps.altitude.isValid())
+    {
+      cutdownStatus = READY;      // Armed
+      Serial.println("GPS Armed");
+    }
+    if(cutdownStatus == ITSTHEFINALCUTDOWN){
+      if(millis() - cutdownStartTime > CutdownTime){
+        digitalWrite(CUTDOWN_PIN, LOW);
+        Serial.println("Cutdown End");
+        readTime();
+      if(file.open("cutdownLog.txt", O_RDWR | O_CREAT | O_AT_END)){
+        String info = String(hour)
+                    + ":"
+                    + String(minute)
+                    + ":"
+                    + String(second)
+                    + " Cutdown End";
+        file.println(info);
+      file.close();
+    }
+        cutdownHappend = true;
+      }
+    }
+
+    // Trigger only if armed
+    if (cutdownStatus == READY && gps.location.isValid() && gps.altitude.isValid()) 
+    {
+      // Uncomment/modify the following code to trigger the cutdown appropriately for your flight
+    
+      // ALTITUDE TEST
+      
+      if (gps.altitude.meters() > 31000)
+      {
+        // Altitude trigger
+        Serial.println("Cutdown Altitude Trigger");
+        cutdownNOW();
+      }
+      
+    
+      // LONGITUDE TEST
+      //if (GPS.Latitude >= 0.0)
+      if (gps.location.lat() > 54.0 || gps.location.lng() > 22.0)
+      {
+        // Longitude trigger
+        Serial.println("Cutdown position trigger");
+        cutdownNOW();
+      }
+      
     }
   }
 }
@@ -217,6 +255,6 @@ void FlightManager::sendPosition(){
   LoRaSerial.print(gps.location.lat(), 6);
   LoRaSerial.print(F(" "));
   LoRaSerial.println(gps.location.lng(), 6);
-  if(settings.debugLogs)
-    Serial.println("Position sent");
+  //For debug purpose:
+  //printGPS();
 }

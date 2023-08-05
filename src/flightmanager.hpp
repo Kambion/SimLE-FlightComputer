@@ -13,12 +13,17 @@
 
 const uint8_t I2C_ADDRESS = 0x68;
 
+enum CDStat {
+        DISARMED,
+        READY,
+        ITSTHEFINALCUTDOWN
+    };
+
 class FlightManager {
 public:
     FlightManager(TinyGPSPlus& gps, SoftWire& softWire, SdFat& sd, DallasTemperature& sensors, Adafruit_MPRLS& mpr) : gps(gps), softWire(softWire), sd(sd), sensors(sensors), mpr(mpr) {}
     void updateGPS();
-    void saveGPSDataOnSDCard();
-    void saveSensorsDataOnSDCard();
+    void saveFrame();
     //Debug functions
     void printGPS();
     void printTime();
@@ -26,13 +31,15 @@ public:
     void printPressure();
     void printSensorsData();
     void sendPosition();
+    void checkCutdown();
+    void cutdownNOW();
     //
-    Settings settings;
 private:
     void printTwoDigit(int n, bool sdcard = false);
     void readTime();
     void readPressure();
 
+    CDStat cutdownStatus = DISARMED;
     TinyGPSPlus& gps;
     SoftWire& softWire;
     int year;
@@ -46,4 +53,6 @@ private:
     DallasTemperature& sensors;
     Adafruit_MPRLS& mpr;
     float pressure_hPa;
+    unsigned long cutdownStartTime;
+    bool cutdownHappend = false;
 };

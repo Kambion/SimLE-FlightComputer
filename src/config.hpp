@@ -8,7 +8,7 @@
 
 //GENERAL CONFIG
 constexpr unsigned long SDSavePeriod = 5000;
-constexpr unsigned long CutdownTime = 60000;
+constexpr unsigned long CutdownTime = 20000;
 //
 
 
